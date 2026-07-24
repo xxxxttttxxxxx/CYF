@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#0d1219">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Rapfi五子棋">
+<title>Rapfi 五子棋胜率助手</title>
+<style>
+:root{--bg:#0d1219;--panel:#17202c;--line:#314156;--text:#f4f7fb;--muted:#9cabbc;--blue:#4b8cff;--green:#36c98d;--yellow:#efb956;--red:#ee6a6a;--safe-t:env(safe-area-inset-top,0px);--safe-b:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","PingFang SC","Microsoft YaHei",sans-serif;overscroll-behavior:none}body{padding-top:var(--safe-t);padding-bottom:var(--safe-b)}button,select{font:inherit}.app{min-height:100dvh;max-width:820px;margin:auto;padding:10px;background:radial-gradient(circle at 50% 0,#1d2d42 0,#101821 40%,#0c1118 100%)}
+.header{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px}.header h1{font-size:18px;margin:0}.header p{font-size:11px;color:var(--muted);margin:3px 0 0}.engine{display:flex;align-items:center;gap:6px;font-size:11px;padding:7px 9px;border-radius:999px;background:#151e29;border:1px solid #344459;white-space:nowrap}.dot{width:8px;height:8px;border-radius:50%;background:var(--yellow);box-shadow:0 0 9px currentColor}.engine.ready .dot{background:var(--green)}.engine.error .dot{background:var(--red)}
+.status{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:11px 12px;margin-bottom:8px;border:1px solid var(--line);border-radius:15px;background:linear-gradient(135deg,#202c3b,#17202b)}.turn{font-size:17px;font-weight:850}.sub{font-size:11px;color:var(--muted);margin-top:4px}.best{text-align:right;font-size:21px;font-weight:900;color:#69dda9}.best small{display:block;font-size:11px;font-weight:500;color:#c7d2df;margin-top:2px}
+.board-wrap{position:relative;width:100%;aspect-ratio:1;border-radius:16px;overflow:hidden;background:#d7a347;box-shadow:0 18px 42px #0006}canvas{display:block;width:100%;height:100%;touch-action:none}.tag{position:absolute;top:8px;left:8px;padding:6px 9px;border-radius:999px;background:#0a1119dc;border:1px solid #ffffff20;font-size:10px;backdrop-filter:blur(7px);pointer-events:none}.stats{position:absolute;right:8px;top:8px;padding:6px 8px;border-radius:10px;background:#0a1119dc;border:1px solid #ffffff20;font-size:9px;line-height:1.45;text-align:right;pointer-events:none}
+.actions{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin:9px 0}.actions button{height:42px;border-radius:12px;border:1px solid #344459;background:#192431;color:#eef3f8;font-size:12px;font-weight:700}.actions .primary{background:#3478e5;border-color:#5796fc}.actions button:disabled{opacity:.45}
+.panel{padding:10px;border:1px solid #2d3b4e;border-radius:17px;background:linear-gradient(180deg,#182330,#111821)}.settings{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.field{padding:9px;border:1px solid #2c3a4c;border-radius:12px;background:#141d28}.field label{display:block;font-size:10px;color:var(--muted);margin-bottom:5px}.field select{width:100%;border:0;outline:0;color:#fff;background:transparent;font-size:13px}.section-title{display:flex;justify-content:space-between;align-items:center;margin:11px 2px 7px;font-size:12px;font-weight:800}.section-title span:last-child{font-size:10px;color:var(--muted);font-weight:500}.candidates{display:flex;gap:8px;overflow-x:auto;padding-bottom:3px;scrollbar-width:none}.candidates::-webkit-scrollbar{display:none}.candidate{flex:0 0 113px;min-height:86px;padding:9px;border:1px solid #2e3c4f;border-radius:13px;background:#141d28;color:#fff;text-align:left}.candidate.best-card{border-color:#5bd8a4;box-shadow:inset 0 0 0 1px #5bd8a43a}.candidate .top{display:flex;justify-content:space-between}.coord{font-size:17px;font-weight:900}.rank{width:21px;height:21px;display:grid;place-items:center;border-radius:7px;background:#263548;font-size:10px}.pct{font-size:19px;font-weight:900;margin-top:7px}.meta{font-size:9px;color:var(--muted);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.empty{padding:13px 5px;color:var(--muted);font-size:12px}.note{font-size:10px;line-height:1.55;color:#8798aa;margin-top:9px}.error-box{display:none;margin-bottom:8px;padding:9px 11px;border:1px solid #743f45;border-radius:12px;background:#321d22;color:#ffc7cc;font-size:11px;line-height:1.5}.error-box.show{display:block}.toast{position:fixed;left:50%;bottom:calc(18px + var(--safe-b));z-index:20;transform:translate(-50%,20px);opacity:0;pointer-events:none;padding:10px 13px;border:1px solid #3b4b60;border-radius:12px;background:#101822;font-size:12px;transition:.2s}.toast.show{opacity:1;transform:translate(-50%,0)}
+@media(min-width:650px){.settings{grid-template-columns:repeat(4,1fr)}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="header">
+    <div><h1>Rapfi 五子棋胜率助手</h1><p>iPhone版 · 真实引擎多候选分析</p></div>
+    <div class="engine" id="engine"><i class="dot"></i><span id="engineText">加载引擎</span></div>
+  </header>
+
+  <div class="error-box" id="errorBox"></div>
+
+  <section class="status">
+    <div><div class="turn" id="turn">正在加载 Rapfi</div><div class="sub" id="sub">首次打开需要下载引擎数据</div></div>
+    <div class="best" id="best">—<small>等待分析</small></div>
+  </section>
+
+  <div class="board-wrap">
+    <canvas id="board"></canvas>
+    <div class="tag" id="tag">Rapfi 初始化中</div>
+    <div class="stats" id="stats">Depth —<br>Nodes —</div>
+  </div>
+
+  <nav class="actions">
+    <button class="primary" id="newBtn">新棋局</button>
+    <button id="demoBtn">演示</button>
+    <button id="undoBtn">撤销</button>
+    <button id="analyzeBtn">重新分析</button>
+  </nav>
+
+  <section class="panel">
+    <div class="settings">
+      <div class="field"><label>我执棋色</label><select id="myColor"><option value="1">黑棋（先手）</option><option value="2">白棋（后手）</option></select></div>
+      <div class="field"><label>思考时间</label><select id="thinkTime"><option value="1000">1 秒</option><option value="3000" selected>3 秒</option><option value="8000">8 秒</option><option value="15000">15 秒</option></select></div>
+      <div class="field"><label>候选数量</label><select id="nbest"><option value="3">3 个</option><option value="5">5 个</option><option value="8" selected>8 个</option><option value="10">10 个</option></select></div>
+      <div class="field"><label>规则</label><select id="rule"><option value="0">自由五子棋</option><option value="1">标准五子棋</option><option value="2">连珠禁手</option></select></div>
+    </div>
+    <div class="section-title"><span>Rapfi 候选落点</span><span id="pvHint">等待引擎</span></div>
+    <div class="candidates" id="candidateList"><div class="empty">引擎正在加载……</div></div>
+    <div class="note">棋盘百分比是 Rapfi 对当前走子方的局面胜率估计；“必胜/必败”会优先显示。多候选分析比只算一步更慢，iPhone 建议使用 3 秒、5～8 个候选。</div>
+  </section>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+(()=>{
+const N=15,EMPTY=0,BLACK=1,WHITE=2,LETTERS='ABCDEFGHJKLMNOP';
+const board=Array.from({length:N},()=>Array(N).fill(EMPTY));
+let history=[],current=BLACK,myColor=BLACK,gameOver=false,candidates=[];
+let worker=null,engineReady=false,engineFailed=false,thinking=false,pendingAnalysis=false,analysisSerial=0;
+let currentPV=0,pvs={},finalPos=null;
+let searchStats={depth:0,seldepth:0,nodes:0,totalNodes:0,time:0,speed:0};
+const $=id=>document.getElementById(id),canvas=$('board'),ctx=canvas.getContext('2d');
+
+function toast(text){const el=$('toast');el.textContent=text;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),1400)}
+function coord(r,c){return LETTERS[c]+(N-r)}
+function opponent(p){return p===BLACK?WHITE:BLACK}
+function inside(r,c){return r>=0&&r<N&&c>=0&&c<N}
+function setEngineState(type,text){$('engine').className='engine'+(type?' '+type:'');$('engineText').textContent=text}
+function showError(text){engineFailed=true;setEngineState('error','引擎错误');$('errorBox').textContent=text;$('errorBox').classList.add('show');$('tag').textContent='Rapfi 加载失败';updateUI()}
+function send(command){if(worker&&engineReady)worker.postMessage({type:'command',data:command})}
+
+function initEngine(force=false){
+  if(worker){worker.terminate();worker=null}
+  engineReady=false;engineFailed=false;thinking=false;pendingAnalysis=false;
+  setEngineState('','加载引擎');$('tag').textContent='Rapfi 初始化中';$('errorBox').classList.remove('show');
+  try{
+    worker=new Worker('./engine-worker.js?v=3');
+    worker.onmessage=onWorkerMessage;
+    worker.onerror=e=>showError('Rapfi Worker 启动失败：'+(e.message||'未知错误'));
+  }catch(e){showError('当前浏览器无法启动 Rapfi：'+e.message)}
+}
+
+function onWorkerMessage(event){
+  const msg=event.data||{};
+  if(msg.type==='ready'){
+    engineReady=true;setEngineState('ready','Rapfi 已就绪');$('tag').textContent='Rapfi 真引擎';
+    send('START 15');updateUI();if(current===myColor&&!gameOver)analyze();return;
+  }
+  if(msg.type==='status'){
+    const s=String(msg.data||'');const m=s.match(/\((\d+)\/(\d+)\)/);
+    if(m){const pct=Math.round(Number(m[1])/Number(m[2])*100);setEngineState('',`加载 ${pct}%`);$('tag').textContent=`下载引擎 ${pct}%`}
+    return;
+  }
+  if(msg.type==='error'){showError('Rapfi 文件加载失败。请检查网络后刷新：'+msg.data);return}
+  if(msg.type==='stderr'){console.warn('[Rapfi]',msg.data);return}
+  if(msg.type==='stdout')String(msg.data||'').split(/\r?\n/).forEach(parseEngineLine);
+}
+
+function pv(){if(!pvs[currentPV])pvs[currentPV]={depth:0,seldepth:0,nodes:0,eval:'-',winrate:null,bestline:[]};return pvs[currentPV]}
+function parseEngineLine(raw){
+  const line=raw.trim();if(!line)return;
+  if(line==='OK')return;
+  if(/^\d+,\d+$/.test(line)){
+    finalPos=line.split(',').map(Number);finishAnalysis();return;
+  }
+  if(line.startsWith('ERROR ')){showError('Rapfi 返回错误：'+line.slice(6));thinking=false;return}
+  if(line.startsWith('MESSAGE '))return;
+  if(!line.startsWith('INFO '))return;
+  const rest=line.slice(5),space=rest.indexOf(' '),key=space<0?rest:rest.slice(0,space),value=space<0?'':rest.slice(space+1);
+  if(key==='PV'){currentPV=value==='DONE'?0:(Number(value)||0);return}
+  if(key==='NUMPV')return;
+  const item=pv();
+  if(key==='DEPTH'){item.depth=Number(value)||0;searchStats.depth=Math.max(searchStats.depth,item.depth)}
+  else if(key==='SELDEPTH'){item.seldepth=Number(value)||0;searchStats.seldepth=Math.max(searchStats.seldepth,item.seldepth)}
+  else if(key==='NODES'){item.nodes=Number(value)||0}
+  else if(key==='TOTALNODES'){searchStats.totalNodes=Number(value)||0}
+  else if(key==='TOTALTIME'){searchStats.time=Number(value)||0}
+  else if(key==='SPEED'){searchStats.speed=Number(value)||0}
+  else if(key==='EVAL')item.eval=value;
+  else if(key==='WINRATE')item.winrate=Number(value);
+  else if(key==='BESTLINE')item.bestline=(value.match(/\d+,\d+/g)||[]).map(s=>s.split(',').map(Number));
+  updateStats();
+}
+
+function probability(item){
+  if(item.eval&&/^\+M/.test(item.eval))return 100;
+  if(item.eval&&/^-M/.test(item.eval))return 0;
+  if(Number.isFinite(item.winrate))return Math.max(0,Math.min(100,Math.round(item.winrate*1000)/10));
+  const e=Number(item.eval);if(Number.isFinite(e))return Math.round((1/(1+Math.exp(-e/800)))*1000)/10;
+  return null;
+}
+function finishAnalysis(){
+  const serial=analysisSerial;
+  thinking=false;
+  const seen=new Set(),list=[];
+  Object.values(pvs).forEach(item=>{
+    if(!item.bestline||!item.bestline.length)return;
+    const [c,r]=item.bestline[0],key=r+','+c;if(seen.has(key)||!inside(r,c)||board[r][c]!==EMPTY)return;seen.add(key);
+    list.push({r,c,prob:probability(item),eval:item.eval,depth:item.depth||0,seldepth:item.seldepth||0,line:item.bestline});
+  });
+  if(finalPos&&finalPos.length===2){const [c,r]=finalPos,key=r+','+c;if(!seen.has(key)&&inside(r,c)&&board[r][c]===EMPTY)list.push({r,c,prob:null,eval:'最佳',depth:searchStats.depth,seldepth:searchStats.seldepth,line:[[c,r]]})}
+  list.sort((a,b)=>{
+    if(a.r===finalPos?.[1]&&a.c===finalPos?.[0])return-1;if(b.r===finalPos?.[1]&&b.c===finalPos?.[0])return 1;
+    return (b.prob??-1)-(a.prob??-1);
+  });
+  candidates=list.map((x,i)=>({...x,rank:i+1}));
+  $('tag').textContent='Rapfi 分析完成';updateUI();draw();saveState();
+  if(pendingAnalysis){pendingAnalysis=false;setTimeout(analyze,20)}
+}
+
+function analyze(){
+  if(!engineReady||engineFailed||gameOver||current!==myColor)return;
+  if(thinking){pendingAnalysis=true;return}
+  thinking=true;analysisSerial++;currentPV=0;pvs={};finalPos=null;candidates=[];searchStats={depth:0,seldepth:0,nodes:0,totalNodes:0,time:0,speed:0};
+  $('tag').textContent='Rapfi 思考中…';updateUI();draw();
+  const ms=Number($('thinkTime').value),nbest=Number($('nbest').value),rule=Number($('rule').value);
+  send('INFO RULE '+rule);send('INFO THREAD_NUM 1');send('INFO STRENGTH 100');send('INFO CAUTION_FACTOR 3');
+  send('INFO HASH_SIZE 32768');send('INFO SHOW_DETAIL 3');send('INFO PONDERING 0');send('INFO MAX_DEPTH 100');send('INFO MAX_NODE 0');
+  send('INFO TIMEOUT_TURN '+ms);send('INFO TIMEOUT_MATCH 9999000');send('INFO TIME_LEFT 9999000');
+  let command='YXBOARD';history.forEach((m,i)=>{command+=' '+m.c+','+m.r+','+(i%2===0?1:2)});command+=' DONE';
+  send(command);send('YXNBEST '+nbest);
+}
+
+function updateStats(){
+  const nodes=searchStats.totalNodes||Object.values(pvs).reduce((s,x)=>s+(x.nodes||0),0);
+  $('stats').innerHTML=`Depth ${searchStats.depth||'—'}-${searchStats.seldepth||'—'}<br>Nodes ${compact(nodes)}`;
+}
+function compact(n){if(!n)return'—';if(n>=1e6)return(n/1e6).toFixed(1)+'M';if(n>=1e3)return(n/1e3).toFixed(1)+'K';return String(n)}
+function probText(x){if(x===100)return'必胜';if(x===0)return'必败';return x==null?'—':x.toFixed(1).replace('.0','')+'%'}
+function probColor(x){if(x==null)return'#d4dee9';if(x>=70)return'#68dda9';if(x>=45)return'#efc06a';return'#ef8585'}
+
+function updateUI(){
+  const mine=current===myColor,best=candidates[0];
+  if(engineFailed){$('turn').textContent='Rapfi 加载失败';$('sub').textContent='检查网络后刷新页面'}
+  else if(!engineReady){$('turn').textContent='正在加载 Rapfi';$('sub').textContent='首次打开可能需要等待几十秒'}
+  else if(gameOver){const winner=history.length?board[history.at(-1).r][history.at(-1).c]:EMPTY;$('turn').textContent=winner===myColor?'你已获胜':'对方已获胜';$('sub').textContent='本局已经结束'}
+  else if(mine){$('turn').textContent=thinking?'Rapfi 正在分析':'轮到你下';$('sub').textContent=thinking?'请等待真实引擎计算':'点击推荐点，在现实棋盘下同一位置'}
+  else{$('turn').textContent='等待对方落子';$('sub').textContent='把对方落点同步点到棋盘'}
+  $('best').innerHTML=mine&&best&&!thinking?coord(best.r,best.c)+`<small>${probText(best.prob)}</small>`:'—<small>'+(thinking?'分析中':'等待落子')+'</small>';
+  const list=$('candidateList');list.innerHTML='';
+  if(thinking)list.innerHTML='<div class="empty">Rapfi 正在计算多个候选点……</div>';
+  else if(!mine)list.innerHTML='<div class="empty">现在轮到对方，请先录入对方落点。</div>';
+  else if(!engineReady)list.innerHTML='<div class="empty">正在下载并初始化 Rapfi 引擎……</div>';
+  else if(!best)list.innerHTML='<div class="empty">点击“重新分析”获取候选落点。</div>';
+  else candidates.forEach(item=>{
+    const button=document.createElement('button');button.className='candidate'+(item.rank===1?' best-card':'');
+    const line=(item.line||[]).slice(1,4).map(([c,r])=>coord(r,c)).join(' → ');
+    button.innerHTML=`<div class="top"><span class="coord">${coord(item.r,item.c)}</span><span class="rank">${item.rank}</span></div><div class="pct" style="color:${probColor(item.prob)}">${probText(item.prob)}</div><div class="meta">D${item.depth}-${item.seldepth} ${item.eval||''}</div><div class="meta">${line||'Rapfi候选'}</div>`;
+    button.onclick=()=>place(item.r,item.c);list.appendChild(button);
+  });
+  $('pvHint').textContent=thinking?'计算中':candidates.length?`${candidates.length} 个候选`:'等待分析';
+  $('analyzeBtn').disabled=!engineReady||thinking||current!==myColor||gameOver;
+  $('undoBtn').disabled=!history.length;
+  updateStats();
+}
+
+function geometry(){const rect=canvas.getBoundingClientRect(),pad=Math.max(28,Math.min(rect.width,rect.height)*.052),size=Math.min(rect.width,rect.height)-pad*2;return{w:rect.width,h:rect.height,pad,step:size/(N-1)}}
+function resize(){const rect=canvas.getBoundingClientRect(),d=Math.max(1,devicePixelRatio||1);canvas.width=Math.round(rect.width*d);canvas.height=Math.round(rect.height*d);ctx.setTransform(d,0,0,d,0,0);draw()}
+function heatColor(p,a=.78){if(p==null)return`rgba(75,140,255,${a})`;if(p>=70)return`rgba(33,187,122,${a})`;if(p>=45)return`rgba(234,166,63,${a})`;return`rgba(220,75,75,${a})`}
+function draw(){
+  const{w,h,pad,step}=geometry();ctx.clearRect(0,0,w,h);const bg=ctx.createLinearGradient(0,0,w,h);bg.addColorStop(0,'#f2cd75');bg.addColorStop(1,'#c78930');ctx.fillStyle=bg;ctx.fillRect(0,0,w,h);
+  ctx.strokeStyle='rgba(47,30,7,.84)';ctx.lineWidth=Math.max(1,step*.025);for(let i=0;i<N;i++){const q=pad+i*step;ctx.beginPath();ctx.moveTo(pad,q);ctx.lineTo(pad+14*step,q);ctx.stroke();ctx.beginPath();ctx.moveTo(q,pad);ctx.lineTo(q,pad+14*step);ctx.stroke()}
+  ctx.fillStyle='#251608';[[3,3],[3,11],[7,7],[11,3],[11,11]].forEach(([r,c])=>{ctx.beginPath();ctx.arc(pad+c*step,pad+r*step,Math.max(2.8,step*.07),0,Math.PI*2);ctx.fill()});
+  ctx.fillStyle='rgba(42,27,7,.86)';ctx.font=`650 ${Math.max(9,step*.25)}px -apple-system`;ctx.textAlign='center';ctx.textBaseline='middle';for(let i=0;i<N;i++){ctx.fillText(LETTERS[i],pad+i*step,h-pad*.38);ctx.fillText(String(N-i),pad*.38,pad+i*step)}
+  if(current===myColor&&!thinking&&!gameOver)candidates.forEach(item=>{const x=pad+item.c*step,y=pad+item.r*step;ctx.beginPath();ctx.arc(x,y,step*.39,0,Math.PI*2);ctx.fillStyle=heatColor(item.prob);ctx.fill();if(item.rank===1){ctx.strokeStyle='#fff';ctx.lineWidth=Math.max(2,step*.065);ctx.stroke()}ctx.fillStyle='#fff';ctx.font=`850 ${Math.max(7.3,step*.19)}px -apple-system`;ctx.fillText(probText(item.prob),x,y+.5)});
+  for(let r=0;r<N;r++)for(let c=0;c<N;c++){const p=board[r][c];if(!p)continue;const x=pad+c*step,y=pad+r*step,rad=step*.39,g=ctx.createRadialGradient(x-rad*.35,y-rad*.35,rad*.1,x,y,rad);if(p===BLACK){g.addColorStop(0,'#4a4a4a');g.addColorStop(.35,'#151515');g.addColorStop(1,'#030303')}else{g.addColorStop(0,'#fff');g.addColorStop(.7,'#eceff2');g.addColorStop(1,'#b7bdc5')}ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,rad,0,Math.PI*2);ctx.fill();ctx.fillStyle=p===BLACK?'#fff':'#111820';ctx.font=`750 ${Math.max(8.5,step*.24)}px -apple-system`;ctx.fillText(String(1+history.findIndex(m=>m.r===r&&m.c===c)),x,y+.5)}
+  if(history.length){const m=history.at(-1),x=pad+m.c*step,y=pad+m.r*step,s=step*.115;ctx.strokeStyle='#ff5959';ctx.lineWidth=Math.max(1.4,step*.045);ctx.strokeRect(x-s,y-s,s*2,s*2)}
+}
+
+function isWin(r,c,p){for(const[dr,dc]of[[1,0],[0,1],[1,1],[1,-1]]){let n=1,k=1;while(inside(r+dr*k,c+dc*k)&&board[r+dr*k][c+dc*k]===p){n++;k++}k=1;while(inside(r-dr*k,c-dc*k)&&board[r-dr*k][c-dc*k]===p){n++;k++}if(n>=5)return true}return false}
+function place(r,c){
+  if(gameOver||!inside(r,c)||board[r][c]!==EMPTY)return;
+  if(current===myColor&&thinking){toast('Rapfi 正在分析，请稍等');return}
+  board[r][c]=current;history.push({r,c,p:current});
+  if(isWin(r,c,current)){gameOver=true;candidates=[];updateUI();draw();saveState();toast((current===myColor?'你':'对方')+'形成五连');return}
+  current=opponent(current);candidates=[];updateUI();draw();saveState();if(current===myColor)analyze();
+}
+function tap(event){event.preventDefault();const rect=canvas.getBoundingClientRect(),g=geometry(),touch=event.changedTouches?event.changedTouches[0]:event,x=touch.clientX-rect.left,y=touch.clientY-rect.top,c=Math.round((x-g.pad)/g.step),r=Math.round((y-g.pad)/g.step);if(inside(r,c)&&Math.hypot(x-(g.pad+c*g.step),y-(g.pad+r*g.step))<=g.step*.53)place(r,c)}
+function clearBoard(){board.forEach(row=>row.fill(EMPTY));history=[];current=BLACK;gameOver=false;candidates=[];pvs={};finalPos=null;updateUI();draw();saveState();if(engineReady&&current===myColor)analyze()}
+function loadDemo(){clearBoard();[[7,7],[6,8],[7,8],[7,9],[8,7],[8,8],[6,7],[6,9],[7,6],[8,9]].forEach((m,i)=>{board[m[0]][m[1]]=i%2?WHITE:BLACK;history.push({r:m[0],c:m[1],p:i%2?WHITE:BLACK})});current=BLACK;myColor=BLACK;$('myColor').value='1';gameOver=false;candidates=[];updateUI();draw();saveState();analyze();toast('演示局面已加载')}
+function saveState(){try{localStorage.setItem('gomoku_rapfi_v1',JSON.stringify({board,history,current,myColor,gameOver,thinkTime:$('thinkTime').value,nbest:$('nbest').value,rule:$('rule').value}))}catch(e){}}
+function restoreState(){try{const s=JSON.parse(localStorage.getItem('gomoku_rapfi_v1')||'null');if(!s)return false;for(let r=0;r<N;r++)for(let c=0;c<N;c++)board[r][c]=s.board[r][c];history=s.history||[];current=s.current||BLACK;myColor=s.myColor||BLACK;gameOver=!!s.gameOver;$('myColor').value=String(myColor);if(s.thinkTime)$('thinkTime').value=s.thinkTime;if(s.nbest)$('nbest').value=s.nbest;if(s.rule)$('rule').value=s.rule;return true}catch(e){return false}}
+
+canvas.addEventListener('touchend',tap,{passive:false});canvas.addEventListener('click',e=>{if(!('ontouchstart'in window))tap(e)});window.addEventListener('resize',resize);window.addEventListener('orientationchange',()=>setTimeout(resize,180));document.addEventListener('gesturestart',e=>e.preventDefault());
+$('newBtn').onclick=()=>{if(thinking)initEngine(true);clearBoard();toast('已创建新棋局')};
+$('demoBtn').onclick=()=>{if(thinking)initEngine(true);loadDemo()};
+$('undoBtn').onclick=()=>{if(!history.length)return;if(thinking)initEngine(true);const m=history.pop();board[m.r][m.c]=EMPTY;current=m.p;gameOver=false;candidates=[];updateUI();draw();saveState();if(engineReady&&current===myColor)analyze()};
+$('analyzeBtn').onclick=analyze;
+$('myColor').onchange=e=>{myColor=Number(e.target.value);candidates=[];updateUI();draw();saveState();if(current===myColor)analyze()};
+['thinkTime','nbest','rule'].forEach(id=>$(id).onchange=()=>{saveState();if(current===myColor&&!thinking)analyze()});
+
+resize();restoreState();updateUI();draw();initEngine();
+})();
+</script>
+</body>
+</html>
